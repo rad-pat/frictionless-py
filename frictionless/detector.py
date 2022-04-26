@@ -445,6 +445,15 @@ class Detector:
             runners = []
             runner_fields = []  # we use shared fields
             for candidate in system.create_candidates():
+                # Can't figure out how to restrict test candidate, but these are the only ones I want to test for
+                if candidate.get('type') not in [
+                    'datetime',
+                    'integer',
+                    'number',
+                    'boolean',
+                    'string',
+                ]:
+                    continue
                 field = Field(candidate)
                 if field.type == "number" and self.__field_float_numbers:
                     field.float_number = True
