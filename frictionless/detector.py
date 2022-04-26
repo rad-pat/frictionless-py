@@ -81,6 +81,7 @@ class Detector:
         field_missing_values=settings.DEFAULT_MISSING_VALUES,
         schema_sync=False,
         schema_patch=None,
+        strict_mode=False,
     ):
         self.__buffer_size = buffer_size
         self.__sample_size = sample_size
@@ -93,6 +94,7 @@ class Detector:
         self.__field_missing_values = field_missing_values
         self.__schema_sync = schema_sync
         self.__schema_patch = schema_patch
+        self.__strict_mode = strict_mode
 
     @property
     def buffer_size(self) -> int:
@@ -295,6 +297,15 @@ class Detector:
         """
         self.__schema_patch = value
 
+    @property
+    def strict_mode(self) -> bool:
+        """Returns whether detection was ran in strict mode.
+
+        Returns:
+            bool: True if strict mode is enabled
+        """
+        return self.__strict_mode
+
     # Detect
 
     def detect_encoding(self, buffer, *, encoding=None):
@@ -461,7 +472,10 @@ class Detector:
                             continue
                         if not is_field_missing_value:
                             target, notes = runner["field"].read_cell(source)
-                            runner["score"] += 1 if not notes else -1
+                            if self.__strict_mode and notes:
+                                runner["score"] = threshold-1
+                            else:
+                                runner["score"] += 1 if not notes else -1
 
                         if max_score[index] > 0 and runner["score"] >= max_score[index] * self.__field_confidence:
                             field = runner["field"].to_copy()
